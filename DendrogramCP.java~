@@ -1,0 +1,243 @@
+import ui.DrawUserInterface;
+import ui.Colour;
+import ui.UserInterfaceFactory;
+import ui.properties.*;
+public class DendrogramCP implements View {
+
+	UserInterfaceFactory ui;	
+	DrawUserInterface window;	
+
+	// Used to get names on x and y axis (variable name)
+	Dataset dataset;
+
+	Colour c_blk, c_red;
+	Colour rand_colour;
+	int r, g, b;
+
+	String elementName;
+	int x_coord = 500;
+	int y_coord = 580;
+
+
+	Dendrogram(Dataset dataset){
+		this.dataset = dataset;
+		ui = new UserInterfaceFactory();
+		window = ui.getDrawUI(650, 650);
+		c_blk = new Colour(100, 100, 100);
+		c_red = new Colour(255, 0, 0);
+
+		// Prints text to the statusbar
+		window.printf("Press any arrow do to clustering...");
+
+	}
+
+	// Methods used by event (to update ui)
+	public DrawUserInterface returnui (){
+		return window;
+	}
+
+	// TEST
+	public void draw(ClusterRow clusters){
+
+		/* 1. For each cluser in the cluserRow, check if it is a leaf or a node.
+		*  	2. If the cluster only contains a leaf, draw straight line
+		*	3. If the cluster contains node, draw node-line. This will be pushed more left the more depth(children) it has
+		* 	4. Also, for each node-cluster, check both its clusers. If leaf goto step2, If node, goto step 3
+		*/
+		window.clear();
+		Cluster currentCluster = null;
+		int depth = 0;
+ 		int size = clusters.getSize();
+		// For all clusters in clusterRow
+		for (int i = 0; i < size; i++){
+			currentCluster = clusters.getCluster(i);
+
+			// Check if leaf or node
+			if(currentCluster instanceof Leaf){
+				drawLeaf(currentCluster);
+
+			// else its a node
+			} else {
+				// fake test method
+				drawRealNode(currentCluster);
+			}
+		}
+
+		window.showChanges();
+
+		x_coord = 500;
+		y_coord = 580;
+	}
+
+	public void drawLeaf(Cluster cluster){
+
+		UnitRow unitRow = cluster.getUnits();		
+		Unit currentUnit = unitRow.getUnit(0);
+		// Draw text
+		window.drawText(x_coord, y_coord, currentUnit.getName(), c_blk);
+		// Pick random colour:
+		r = (int)(Math.round(Math.random() * 255));
+		g = (int)(Math.round(Math.random() * 255));
+		b = (int)(Math.round(Math.random() * 255));
+		rand_colour = new Colour(r, g, b);
+		// Draws circles (with random colours)
+		window.drawCircle(x_coord-10, y_coord+5, 10, 10, rand_colour, true);
+
+		// Draw lines
+		window.drawLine(x_coord-15, y_coord+5, 10, y_coord+5, c_blk);
+
+		// Updates y-coords
+		y_coord = y_coord-20;
+		
+	}
+
+	public void drawNode(Cluster cluster){
+		System.out.println("Tries to draw node");
+
+		r = (int)(Math.round(Math.random() * 255));
+		g = (int)(Math.round(Math.random() * 255));
+		b = (int)(Math.round(Math.random() * 255));
+		rand_colour = new Colour(r, g, b);
+
+		// Draw text
+		window.drawText(x_coord, y_coord, "currentUnit", c_red);
+		// var 400 need to be switched out with real coord
+		window.drawCircle(x_coord-10, y_coord+5, 10, 10, rand_colour, true);
+		window.drawLine(x_coord-15, y_coord+5, 400, y_coord+5, c_blk);
+
+		// Draw vertical line and dot (connection between two units) (15 is hardcoded. must be changed)
+		window.drawLine(400, y_coord+5, 400, y_coord-15, c_blk);
+
+		// Draw dot (also update Y)
+		y_coord = y_coord-10;
+		// Horizotal line from connection circle
+		window.drawLine(400, y_coord+5, 10, y_coord+5, c_blk);
+		// Connection circle
+		window.drawCircle(400, y_coord+5, 10, 10, rand_colour, true);
+		// Update y more
+		y_coord = y_coord-10;
+		
+		// Draw text
+		window.drawText(x_coord, y_coord, "currentUnit", c_red);
+		window.drawCircle(x_coord-10, y_coord+5, 10, 10, rand_colour, true);
+		window.drawLine(x_coord-15, y_coord+5, 400, y_coord+5, c_blk);
+	}
+
+	public void drawRealNode(Cluster cluster){
+		
+		/* Each node is connected to two clusters, either a leaf or a node
+		* 	if it's leaf, simply draw straight line
+		*	if it's a node, continue draw node, until it reaches only leaf
+		*/
+
+		// X-axis (horizontal) determined by depths (higher = farer left)
+		int clusterDepth = cluster.getDepth();
+		int clusterWidth = cluster.getWidth();		
+		int horizontalDistance = 500/clusterDepth;
+
+		x_coord = 500;
+		y_coord = 580; 
+
+		for (int i = 0; i< clusterDepth; i++){
+			/* Draw node start from the leaf in the rihgt. 
+			/*	Jump one horizontal distance each time 
+			* 	and finish with drawing a end line 
+			*/
+			// Draw text
+			window.drawText(500, y_coord, "currentUnit", c_red);
+			// var 400 need to be switched out with real coord
+			window.drawCircle(x_coord-10, y_coord+5, 10, 10, rand_colour, true);
+			window.drawLine(x_coord-15, y_coord+5, 400, y_coord+5, c_blk);
+
+			// Draw vertical line and dot (connection between two units) (15 is hardcoded. must be changed)
+			window.drawLine(400, y_coord+5, 400, y_coord-15, c_blk);
+
+			// Draw dot (also update Y)
+			y_coord = y_coord-10;
+			// Horizotal line from connection circle
+			window.drawLine(400, y_coord+5, 10, y_coord+5, c_blk);
+			// Connection circle
+			window.drawCircle(400, y_coord+5, 10, 10, rand_colour, true);
+			// Update y more
+			y_coord = y_coord-10;
+			
+			// Draw text
+			window.drawText(500, y_coord, "currentUnit", c_red);
+			window.drawCircle(x_coord-10, y_coord+5, 10, 10, rand_colour, true);
+			window.drawLine(x_coord-15, y_coord+5, 400, y_coord+5, c_blk);
+
+			x_coord = x_coord - horizontalDistance;
+
+		}
+
+	}
+
+//	public void draw(ClusterRow clusters){
+		/*NB: A clusterRow has a number of leaf (cluster) */
+/*	
+		String elementName;
+		int x_coord = 500;
+		int y_coord = 580;
+
+		Unit currentUnit;
+		UnitRow unitRow;
+		// For all clusters in the clusterRow
+		for (int i= 0; i < clusters.getSize(); i++){
+
+			unitRow = clusters.getCluster(i).getUnits();
+		
+			// For all units in unitRow 
+			for (int j = 0; j < clusters.getCluster(i).getWidth(); j++){
+				
+				currentUnit = unitRow.getUnit(j);
+				// Draw text
+				window.drawText(x_coord, y_coord, currentUnit.getName(), c_blk);
+				// Pick random colour:
+				r = (int)(Math.round(Math.random() * 255));
+				g = (int)(Math.round(Math.random() * 255));
+				b = (int)(Math.round(Math.random() * 255));
+				rand_colour = new Colour(r, g, b);
+				// Draws circles (with random colours)
+				window.drawCircle(x_coord-10, y_coord+5, 10, 10, rand_colour, true);
+
+				// Draw lines
+				window.drawLine(x_coord-15, y_coord+5, 0, y_coord+5, c_blk);
+
+				// Updates y-coords
+				y_coord = y_coord-20;
+			}
+		}
+	}
+*/
+// DUMMY METHOD
+//	public void draw(ClusterRow clusters){
+			/*NB: A clusterRow has a number of leaf (cluster) */
+/*			
+		String elementName;
+		int x_coord = 500;
+		int y_coord = 580;
+
+		Unit currentUnit;
+		UnitRow unitRow;
+		// For all clusters in the clusterRow
+		for (int i= 0; i < 15; i++){
+
+			// Draw text
+			window.drawText(x_coord, y_coord, "x", c_blk);
+			// Pick random colour:
+			r = (int)(Math.round(Math.random() * 255));
+			g = (int)(Math.round(Math.random() * 255));
+			b = (int)(Math.round(Math.random() * 255));
+			rand_colour = new Colour(r, g, b);
+			// Draws circles (with random colours)
+			window.drawCircle(x_coord-10, y_coord+5, 10, 10, rand_colour, true);
+
+			// Draw lines
+			window.drawLine(x_coord-15, y_coord+5, 0, y_coord+5, c_blk);
+
+			// Updates y-coords
+			y_coord = y_coord-20;
+		}
+	}
+	*/
+}
